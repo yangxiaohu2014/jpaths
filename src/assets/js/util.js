@@ -2,13 +2,18 @@ function _createPathElement() {
   return document.createElementNS('http://www.w3.org/2000/svg', 'path');
 }
 
-function _fix(num) {
+export function fix(num, degree = 2) {
+  degree = Math.pow(10, degree)
+
   if (num instanceof Array) {
-    num.forEach(function(value, i) {
-      num[i] = round(value * precisionInverse) / precisionInverse;
+    num.map(function(value, i) {
+      if (+value + '' === 'NaN') {
+        return value 
+      }
+      return round(value * degree) / degree;
     });
   } else {
-    num = round(num * precisionInverse) / precisionInverse;
+    num = round(num * degree) / degree;
   }
   return num;
 }
@@ -173,7 +178,7 @@ export function toArray(path, pathElement) {
       default:
         break;
     }
-    result.push([type].concat(param));
+    result.push([type].concat(fix(param)));
   }
   return result;
 }
@@ -529,8 +534,8 @@ export function subPathes(path) {
         count: count++,
         normalPathData: pathData,
         pathData: item.slice(1),
-        startPoint: [sx, sy],
-        endPoint: [x, y],
+        startPoint: fix([sx, sy]),
+        endPoint: fix([x, y]),
         length: len,
         isMoved: preType === 'M'
       });
@@ -588,9 +593,9 @@ export function at(path, position) {
   tangent = [cos(rotate), sin(rotate)];
 
   return {
-    point: _fix([curPoint.x, curPoint.y]),
-    tangent: _fix(tangent),
-    rotate: _fix(rotate)
+    point: fix([curPoint.x, curPoint.y]),
+    tangent: fix(tangent),
+    rotate: fix(rotate)
   };
 }
 
@@ -638,7 +643,7 @@ export function cut(path, position) {
   subPath1.push([type].concat(subs[0].slice(2)));
   subPath2.unshift(['M'].concat(subs[1].slice(0, 2)), [type].concat(subs[1].slice(2)));
 
-  return [subPath1, subPath2];
+  return [fix(subPath1), fix(subPath2)];
 }
 
 export function sub(path, position, length) {
@@ -720,12 +725,14 @@ export function toCurve(path) {
 
   normalPath.forEach(function(sub, i) {
     type = sub[0];
-    pathData = sub.slice(1);
-    curEnd = sub.slice(-2);
+    pathData = fix(sub.slice(1));
+    curEnd = pathData.slice(-2);
 
     if (type === 'L') {
       cubic = g.upgradeBezier(curStart.concat(curEnd), 3);
-      normalPath[i] = ['C'].concat(cubic.slice(2));
+      normalPath[i] = ['C'].concat(fix(cubic.slice(2)));
+    } else {
+      normalPath[i] = [type].concat(pathData)
     }
     curStart = curEnd;
   });
@@ -845,7 +852,7 @@ export function tween(sourcePath, desPath, t) {
     }
 
     for (j = 0; j < sourceSubPathData.length; j++) {
-      value = _fix(sourceSubPathData[j] + t * (desSubPathData[j] - sourceSubPathData[j]));
+      value = fix(sourceSubPathData[j] + t * (desSubPathData[j] - sourceSubPathData[j]));
       tweenSubPathData.push(value);
     }
 

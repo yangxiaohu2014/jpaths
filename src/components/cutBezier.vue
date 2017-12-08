@@ -1,15 +1,33 @@
 <template>
-  <div>
-    <svg ref='svg' xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <div class="clear-both">
+    <svg class='float-left' ref='svg' xmlns="http://www.w3.org/2000/svg" version="1.1">
       <path class='origin' ref='origin' :d='originPath'></path>
       <path :d='part1'></path>
       <path :d='part2'></path>
     </svg>
+    <ul class="info float-left">
+        <li><button @click='onFresh'>刷新</button></li>
+        <li><span>路径A【灰色】</span><div>{{originPath}}</div></li>
+        <li><span>路径B【多色】</span><div>{{part1}}<hr/>{{part2}}</div></li>
+    </ul>
+    <div class="code float-left">
+        <pre>
+            <code>
+      var position = Math.random() * this.length
+      var paths = jpathObj.cut(position)
+
+      this.part1 = paths[0].toString('%n')
+      this.part2 = paths[1].toString('%n')
+            </code>
+        </pre>
+    </div>
   </div>
 </template>
 
 <script>
 import jPaths from '@/assets/js/jpaths'
+
+var jpathObj = null
 
 export default {
   name: 'cutBezier',
@@ -20,31 +38,22 @@ export default {
       part2: 'M0,0L0,0'
     }
   },
+  computed: {
+    length() {
+      return this.$refs.origin.getTotalLength()
+    }
+  },
   methods: {
-    test() {
-      var jpathObj = jPaths(this.originPath)
-      var length = this.$refs.origin.getTotalLength()
-      var step = length * .2
-      var position = step
-      var flag = 1
-      var self = this
+    onFresh() {
+      var position = Math.random() * this.length
+      var paths = jpathObj.cut(position)
 
-      function cut() {
-        flag = position >= length ? -1 : position <= 0 ? 1 : flag
-
-        position += flag * step
-
-        var paths = jpathObj.cut(position)
-
-        self.part1 = paths[0].toString('%n')
-        self.part2 = paths[1].toString('%n')
-      }
-
-      setInterval(cut, 2000)
+      this.part1 = paths[0].toString('%n')
+      this.part2 = paths[1].toString('%n')
     }
   },
   mounted() {
-    this.test()
+    jpathObj = jPaths(this.originPath)
   }
 }
 </script>
